@@ -8,8 +8,9 @@ services:
       - "1433:1433"
 
   backend:
-    build: ./back
-    dockerfile: Dockerfile
+    build:
+      context: ./back
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     depends_on:
@@ -23,7 +24,9 @@ services:
       - ./back/CreateDB.sql:/app/CreateDB.sql 
 
   frontend:
-    build: ./front
+    build:
+      context: ./front
+      dockerfile: Dockerfile
     ports:
       - "8080:80"
     depends_on:
