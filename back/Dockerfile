@@ -14,4 +14,10 @@ RUN dotnet publish "AA1.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Obligamos a la aplicación a escuchar en el puerto 3000 en todas las interfaces de red
+ENV ASPNETCORE_URLS=http://+:3000
+# Informamos a Docker que el contenedor usa el puerto 3000
+EXPOSE 3000
+
 ENTRYPOINT ["dotnet", "AA1.dll"]

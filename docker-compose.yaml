@@ -12,14 +12,14 @@ services:
       context: ./back
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:3000" # Mapeamos el puerto 3000 del contenedor al 3000 de tu PC
     depends_on:
       - db
     environment:
       - DB_SERVER=db
       - DB_PASSWORD=yourStrong(!)Password
       - DB_NAME=AA1
-    # Este volumen permite que el back acceda al script si decides ejecutarlo vía código
+      - ASPNETCORE_URLS=http://+:3000 # IMPORTANTE: Obliga a C# a escuchar en el 3000
     volumes:
       - ./back/CreateDB.sql:/app/CreateDB.sql 
 
@@ -31,3 +31,5 @@ services:
       - "8080:5173"
     depends_on:
       - backend
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
