@@ -1,31 +1,29 @@
-version: '3.8'
-
 services:
-  # Base de Datos (Obligatorio incluirla si tu API la usa) 
-  database:
-    image: mongo:latest  # Cambia por mysql o postgres si usas otra
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=yourStrong(!)Password
     ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+      - "1433:1433"
 
-  # El Backend
   backend:
-    build: ./backend  # Ruta a la carpeta del back
+    build: ./back
     ports:
       - "3000:3000"
     depends_on:
-      - database
+      - db
     environment:
-      - DB_CONNECTION=mongodb://database:27017/tu_bd
+      - DB_SERVER=db
+      - DB_PASSWORD=yourStrong(!)Password
+      - DB_NAME=AA1
+    # Este volumen permite que el back acceda al script si decides ejecutarlo vía código
+    volumes:
+      - ./back/CreateDB.sql:/app/CreateDB.sql 
 
-  # El Frontend (Vue 3)
   frontend:
-    build: ./frontend # Ruta a la carpeta del front
+    build: ./front
     ports:
-      - "8080:80"     # El puerto donde el profesor verá la web
+      - "8080:80"
     depends_on:
       - backend
-
-volumes:
-  mongo_data:
