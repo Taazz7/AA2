@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Base de Datos (Obligatorio incluirla si tu API la usa) 
+  database:
+    image: mongo:latest  # Cambia por mysql o postgres si usas otra
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # El Backend
+  backend:
+    build: ./backend  # Ruta a la carpeta del back
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    environment:
+      - DB_CONNECTION=mongodb://database:27017/tu_bd
+
+  # El Frontend (Vue 3)
+  frontend:
+    build: ./frontend # Ruta a la carpeta del front
+    ports:
+      - "8080:80"     # El puerto donde el profesor verá la web
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
