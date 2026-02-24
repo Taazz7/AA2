@@ -1,93 +1,122 @@
 <template>
   <v-container>
-    <v-row class="mb-5 align-center">
+    <v-row class="align-center mb-6">
       <v-col>
-        <h1 class="text-h4 font-weight-bold">
-          <v-icon icon="mdi-cog" class="mr-2"></v-icon>
-          Panel de Administración
-        </h1>
-        <p class="text-subtitle-1 text-grey">Gestión de pistas y recursos del club</p>
+        <h1 class="text-h4">Panel de Administración</h1>
       </v-col>
       <v-col class="text-right">
-        <v-btn 
-          color="primary" 
-          prepend-icon="mdi-plus" 
-          size="large"
-          @click="pistaStore.fetchPistas()"
-        >
-          Refrescar Datos
+        <v-btn color="primary" prepend-icon="mdi-plus" @click="dialog = true">
+          Nueva Pista
         </v-btn>
       </v-col>
     </v-row>
 
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
 
-    <v-row v-if="pistaStore.loading" justify="center" class="py-10">
-      <v-col cols="12" class="text-center">
-        <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-        <p class="mt-4">Conectando con la base de datos...</p>
-      </v-col>
-    </v-row>
-
-    <v-row v-else-if="pistaStore.pistas.length > 0">
-      <v-col 
-        v-for="pista in pistaStore.pistas" 
-        :key="pista.idPista" 
-        cols="12" 
-        sm="6" 
-        lg="4"
-      >
+    <v-row v-if="!pistaStore.loading">
+      <v-col v-for="pista in pistaStore.pistas" :key="pista.idPista" cols="12" md="6" lg="4">
         <PistaCard 
           :pista="pista" 
-          @delete="handleDelete" 
-          @edit="handleEdit"
+          @delete="eliminar" 
+          @edit="abrirEdicion" 
         />
       </v-col>
     </v-row>
 
     <v-row v-else justify="center">
-      <v-col cols="12" md="6">
-        <v-alert
-          type="info"
-          title="Sin registros"
-          text="No se han encontrado pistas. Asegúrate de que el Backend esté corriendo y la base de datos AA1 tenga datos."
-          variant="tonal"
-          icon="mdi-database-off"
-        ></v-alert>
-      </v-col>
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </v-row>
+
+    <v-dialog v-model="dialog" max-width="500px">
+      <v-card>
+        <v-card-title class="bg-primary text-white">Detalles de la Pista</v-card-title>
+        <v-card-text class="pt-4">
+          <v-form @submit.prevent="guardarPista">
+            <v-text-field
+              v-model="nombre.value"
+              label="Nombre de la pista"
+              :error-messages="nombre.errorMessage"
+              variant="outlined"
+            ></v-text-field>
+
+            <v-select
+              v-model="tipo.value"
+              :items="['Tenis', 'Padel', 'Futbol']"
+              label="Tipo de Pista"
+              :error-messages="tipo.errorMessage"
+              variant="outlined"
+            ></v-select>
+
+            <v-text-field
+              v-model="precio.value"
+              label="Precio por Hora (€)"
+              type="number"
+              :error-messages="precio.errorMessage"
+              variant="outlined"
+            ></v-text-field>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="grey" variant="text" @click="dialog = false">Cancelar</v-btn>
+              <v-btn color="success" type="submit" variant="elevated">Guardar</v-btn>
+            </v-card-actions>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-// Usamos rutas relativas para evitar fallos de configuración de alias (@)
+import { ref, onMounted } from 'vue'
 import { usePistaStore } from '../stores/pistaStore'
 import PistaCard from '../components/PistaCard.vue'
+import { useForm, useField } from 'vee-validate'
+import * as yup from 'yup'
 
-// Inicializamos el store
 const pistaStore = usePistaStore()
+const dialog = ref(false)
 
-// Al cargar la vista, llamamos a la API
-onMounted(async () => {
-  await pistaStore.fetchPistas()
+// 1. Esquema de Validación (YUP) - Obligatorio según el PDF
+const schema = yup.object({
+  nombre: yup.string().required('El nombre es obligatorio').min(3, 'Mínimo 3 letras'),
+  tipo: yup.string().required('Selecciona un deporte'),
+  precio: yup.number().typeError('Debe ser un número').required('Precio necesario').min(1, 'Mínimo 1€')
 })
 
-// Funciones para gestionar eventos del componente hijo
-const handleDelete = async (id: number) => {
-  if (confirm('¿Estás seguro de que deseas eliminar esta pista?')) {
-    await pistaStore.deletePista(id)
+// 2. Configurar VeeValidate
+const { handleSubmit, resetForm } = useForm({
+  validationSchema: schema,
+})
+
+const nombre = useField<string>('nombre')
+const tipo = useField<string>('tipo')
+const precio = useField<number>('precio')
+
+// 3. Carga inicial
+onMounted(() => {
+  pistaStore.fetchPistas()
+})
+
+// 4. Lógica del CRUD
+const eliminar = (id: number) => {
+  if (confirm('¿Seguro que quieres borrar esta pista?')) {
+    pistaStore.deletePista(id)
   }
 }
 
-const handleEdit = (pista: any) => {
-  console.log('Editar pista:', pista)
-  alert('Función de edición en desarrollo para el siguiente punto del PDF')
+const abrirEdicion = (pista: any) => {
+  console.log('Editar:', pista)
+  // Aquí podrías cargar los datos en el formulario para editar
 }
-</script>
 
-<style scoped>
-.v-container {
-  max-width: 1200px;
-}
-</style>
+const guardarPista = handleSubmit(async (values) => {
+  console.log('Datos validados enviados al backend:', values)
+  
+  // Aquí llamarías a tu función de crear en el store:
+  // await pistaStore.createPista(values)
+  
+  dialog.value = false
+  resetForm()
+})
+</script>

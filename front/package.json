@@ -12,15 +12,15 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "vue": "^3.x.x",
-    "vue-router": "^4.x.x",
-    "pinia": "^2.x.x",
-    "vuetify": "^3.5.0",
     "@mdi/font": "^7.4.47",
     "mdi": "^2.2.43",
+    "pinia": "^2.x.x",
+    "vee-validate": "^4.15.1",
+    "vue": "^3.x.x",
+    "vue-router": "^4.x.x",
+    "vuetify": "^3.5.0",
     "webfontloader": "^1.6.28",
-    "vee-validate": "^4.12.0",
-    "yup": "^1.3.0"
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
