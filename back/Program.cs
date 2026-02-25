@@ -104,8 +104,14 @@ app.UseSwaggerUI(c => {
 });
 
 app.UseRouting();
-app.UseCors("AllowAll");
-app.UseAuthorization();
-app.MapControllers();
 
+app.UseCors("AllowAll"); 
+
+//app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapControllers();
 app.Run();

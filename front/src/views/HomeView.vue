@@ -1,45 +1,23 @@
 <template>
-  <div class="container">
-    <h2>Listado de Pistas Disponibles</h2>
-
-    <p v-if="pistaStore.loading">Consultando base de datos...</p>
-
-    <p v-else-if="pistaStore.error" style="color: red;">
-      No se pudo cargar el listado: {{ pistaStore.error }}
-    </p>
-
-    <table v-else class="table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Deporte</th>
-          <th>Precio/Hora</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="pista in pistaStore.pistas" :key="pista.idPista">
-          <td>{{ pista.nombre }}</td>
-          <td>{{ pista.tipo }}</td>
-          <td>{{ pista.precioHora }}€</td>
-          <td>
-            <span v-if="pista.activa">Disponible</span>
-            <span v-else>En mantenimiento</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <v-container>
+    <h1 class="text-h4 mb-6">Nuestras Pistas</h1>
+    
+    <PistaList />
+    
+    <v-alert v-if="store.pistas.length === 0" type="info">
+      No hay pistas disponibles o cargando...
+    </v-alert>
+  </v-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue';
-import { usePistaStore } from '@/stores/pistaStore';
+import { usePistaStore } from '../stores/pistaStore';
+import PistaList from '../components/PistaList.vue';
 
-const pistaStore = usePistaStore();
+const store = usePistaStore();
 
-// Esto es lo que "dispara" la acción al cargar la web
 onMounted(() => {
-  pistaStore.fetchPistas();
+  store.cargarPistas();
 });
 </script>

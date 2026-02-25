@@ -1,25 +1,26 @@
 import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import type { Pista } from '../interfaces/Pista';
 
-export const usePistaStore = defineStore('pista', {
-  state: () => ({
-    pistas: [] as any[],
-    loading: false
-  }),
-  actions: {
-    async fetchPistas() {
-      this.loading = true;
-      try {
-        // Usamos el puerto 3000 que vemos en Swagger
-        const response = await fetch('http://localhost:3000/api/Pista');
-        if (response.ok) {
-          this.pistas = await response.json();
-          console.log("Datos recibidos:", this.pistas);
-        }
-      } catch (error) {
-        console.error("Error al conectar con el puerto 3000:", error);
-      } finally {
-        this.loading = false;
-      }
+export const usePistaStore = defineStore('pistas', () => {
+  const pistas = ref<Pista[]>([]);
+
+  const cargarPistas = async () => {
+  try {
+    // Asegúrate de que la URL coincide exactamente con Swagger
+    const response = await fetch('http://localhost:3000/api/Pista'); 
+    
+    if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
     }
+
+    const data = await response.json();
+    console.log("Datos recibidos:", data); // Mira esto en la consola
+    pistas.value = data;
+  } catch (error) {
+    console.error("Error en el fetch:", error);
   }
+};
+
+  return { pistas, cargarPistas };
 });
