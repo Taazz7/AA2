@@ -41,45 +41,53 @@ builder.Services.AddCors(options => {
 
 var app = builder.Build();
 
-// --- LÓGICA DE INICIALIZACIÓN DE BASE DE DATOS ---
+
+// --- BLOQUE DE DEPURACIÓN E INICIALIZACIÓN ---
 using (var scope = app.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    // El archivo CreateDB.sql debe estar en la raíz de ejecución del contenedor
     string scriptPath = Path.Combine(AppContext.BaseDirectory, "CreateDB.sql");
 
-    // Creamos una cadena de conexión temporal a 'master' para crear la base de datos AA1
-    var masterConnectionString = (connectionString ?? "").Replace("Database=AA1", "Database=master");
+    // Construimos una cadena de conexión manual solo para la inicialización
+    // Esto evita que el driver busque 'AA1' antes de tiempo
+    var builderDb = new SqlConnectionStringBuilder(connectionString);
+    builderDb.InitialCatalog = "master"; // Forzamos conexión a master
+    string masterConn = builderDb.ConnectionString;
 
     bool initialized = false;
-    for (int i = 0; i < 15; i++) // 15 intentos (aprox 75 segundos)
+    for (int i = 0; i < 15; i++) 
     {
         try
         {
-            using var connection = new SqlConnection(masterConnectionString);
+            using var connection = new SqlConnection(masterConn);
             connection.Open();
             
             if (File.Exists(scriptPath))
             {
                 string script = File.ReadAllText(scriptPath);
-                using var command = new SqlCommand(script, connection);
-                command.ExecuteNonQuery();
-                logger.LogInformation(">>> SQL: Base de datos y tablas verificadas/creadas correctamente.");
+                // Dividimos por GO para evitar errores de sintaxis
+                var parts = script.Split(new[] { "GO", "go", "Go", "gO" }, StringSplitOptions.RemoveEmptyEntries);
+                
+                foreach (var part in parts)
+                {
+                    if (!string.IsNullOrWhiteSpace(part))
+                    {
+                        using var command = new SqlCommand(part, connection);
+                        command.ExecuteNonQuery();
+                    }
+                }
+                logger.LogInformation(">>> SQL: ¡ÉXITO! Base de datos AA1 y tablas creadas.");
                 initialized = true;
-            }
-            else 
-            {
-                logger.LogError($">>> SQL: No se encuentra el archivo {scriptPath}");
             }
             break; 
         }
         catch (Exception ex)
         {
-            logger.LogWarning($">>> SQL: Esperando a SQL Server... Intento {i + 1}/15. (Error: {ex.Message})");
-            Thread.Sleep(5000); // Espera 5 segundos entre intentos
+            logger.LogWarning($">>> SQL: Intento {i + 1}/15. Esperando a que el contenedor DB esté listo...");
+            Thread.Sleep(5000); 
         }
     }
-    if (!initialized) logger.LogCritical(">>> SQL: No se pudo inicializar la base de datos.");
+    if (!initialized) logger.LogCritical(">>> SQL: No se pudo crear la base de datos.");
 }
 
 // Configuración de Swagger para que sea accesible en Docker 
