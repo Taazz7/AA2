@@ -10,7 +10,6 @@ namespace AA1.Services
         public UsuarioService(IUsuarioRepository usuarioRepository)
         {
             _usuarioRepository = usuarioRepository;
-            
         }
 
         public async Task<List<Usuario>> GetAllAsync()
@@ -28,11 +27,13 @@ namespace AA1.Services
 
         public async Task AddAsync(Usuario usuario)
         {
-            if (string.IsNullOrWhiteSpace(usuario.Nombre))
-                throw new ArgumentException("El nombre del usuario no puede estar vacío.");
+            // CAMBIO: Validamos UsuarioNombre (antes Nombre)
+            if (string.IsNullOrWhiteSpace(usuario.UsuarioNombre))
+                throw new ArgumentException("El nombre de usuario no puede estar vacío.");
 
-            if (string.IsNullOrWhiteSpace(usuario.Apellido))
-                throw new ArgumentException("El apellido del usuario no puede estar vacío.");
+            // CAMBIO: Validamos Email (antes Apellido)
+            if (string.IsNullOrWhiteSpace(usuario.Email))
+                throw new ArgumentException("El email del usuario no puede estar vacío.");
 
             await _usuarioRepository.AddAsync(usuario);
         }
@@ -42,8 +43,9 @@ namespace AA1.Services
             if (usuario.IdUsuario <= 0)
                 throw new ArgumentException("El ID no es válido para actualización.");
 
-            if (string.IsNullOrWhiteSpace(usuario.Nombre))
-                throw new ArgumentException("El nombre del plato no puede estar vacío.");
+            // CAMBIO: Validamos UsuarioNombre
+            if (string.IsNullOrWhiteSpace(usuario.UsuarioNombre))
+                throw new ArgumentException("El nombre de usuario no puede estar vacío.");
 
             await _usuarioRepository.UpdateAsync(usuario);
         }

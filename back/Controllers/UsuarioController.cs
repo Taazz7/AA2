@@ -4,16 +4,14 @@ using Models;
 
 namespace AA1.Controllers
 {
-   [Route("api/[controller]")]
-   [ApiController]
-   public class UsuarioController : ControllerBase
-   {
-    private static List<Usuario> usuario = new List<Usuario>();
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UsuarioController : ControllerBase
+    {
+        private readonly IUsuarioRepository _repository;
+        private readonly IReservaRepository _reservaRepository; 
 
-    private readonly IUsuarioRepository _repository;
-    private readonly IReservaRepository _reservaRepository; 
-
-    public UsuarioController(IUsuarioRepository repository, IReservaRepository reservaRepository) 
+        public UsuarioController(IUsuarioRepository repository, IReservaRepository reservaRepository) 
         {
             _repository = repository;
             _reservaRepository = reservaRepository; 
@@ -41,14 +39,12 @@ namespace AA1.Controllers
         [HttpGet("{id}/reservas")]
         public async Task<ActionResult<List<Reserva>>> GetReservasByUsuario(int id)
         {
-            // Verificar que el usuario existe
             var usuario = await _repository.GetByIdAsync(id);
             if (usuario == null)
             {
                 return NotFound(new { mensaje = $"Usuario con ID {id} no encontrado" });
             }
 
-            // Obtener las reservas del usuario
             var reservas = await _reservaRepository.GetByUsuarioIdAsync(id);
             return Ok(reservas);
         }
@@ -60,7 +56,7 @@ namespace AA1.Controllers
             return CreatedAtAction(nameof(GetUsuario), new { id = usuario.IdUsuario }, usuario);
         }
 
-       [HttpPut("{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUsuario(int id, Usuario updatedUsuario)
         {
             var existingUsuario = await _repository.GetByIdAsync(id);
@@ -69,28 +65,27 @@ namespace AA1.Controllers
                 return NotFound();
             }
 
-            // Actualizar el Usuario existente
-            existingUsuario.Nombre = updatedUsuario.Nombre;
-            existingUsuario.Apellido = updatedUsuario.Apellido;
+            // MODIFICACIÓN: Actualizar con los campos reales de tu nueva tabla
+            existingUsuario.UsuarioNombre = updatedUsuario.UsuarioNombre;
+            existingUsuario.Email = updatedUsuario.Email;
             existingUsuario.Telefono = updatedUsuario.Telefono;
-            existingUsuario.Direccion = updatedUsuario.Direccion;
-            existingUsuario.FechaNac = updatedUsuario.FechaNac;
+            existingUsuario.Contraseña = updatedUsuario.Contraseña;
+            existingUsuario.Rol = updatedUsuario.Rol;
 
             await _repository.UpdateAsync(existingUsuario);
             return NoContent();
         }
   
-       [HttpDelete("{id}")]
-       public async Task<IActionResult> DeleteUsuario(int id)
-       {
-           var usuario = await _repository.GetByIdAsync(id);
-           if (usuario == null)
-           {
-               return NotFound();
-           }
-           await _repository.DeleteAsync(id);
-           return NoContent();
-       }
-
-   }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUsuario(int id)
+        {
+            var usuario = await _repository.GetByIdAsync(id);
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+            await _repository.DeleteAsync(id);
+            return NoContent();
+        }
+    }
 }

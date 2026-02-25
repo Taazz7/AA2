@@ -1,4 +1,3 @@
-
 using Microsoft.Data.SqlClient;
 using Models;
 
@@ -12,7 +11,6 @@ namespace AA1.Repositories
         {
              _connectionString = configuration.GetConnectionString("AA1") ?? "Not found";
         }
-        
 
         public async Task<List<Usuario>> GetAllAsync()
         {
@@ -22,7 +20,8 @@ namespace AA1.Repositories
             {
                 await connection.OpenAsync();
 
-                string query = "SELECT idUsuario, nombre, apellido, telefono, direccion, fechaNac FROM USUARIOS";
+                // CAMBIO: Nombres de columnas según tu nueva tabla
+                string query = "SELECT idUsuario, usuario, email, telefono, contraseña, rol FROM USUARIOS";
                 using (var command = new SqlCommand(query, connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
@@ -32,11 +31,11 @@ namespace AA1.Repositories
                             var usuario = new Usuario
                             {
                                 IdUsuario = reader.GetInt32(0),
-                                Nombre = reader.GetString(1),
-                                Apellido = reader.GetString(2),
+                                UsuarioNombre = reader.GetString(1), // Mapea 'usuario'
+                                Email = reader.GetString(2),         // Mapea 'email'
                                 Telefono = reader.GetInt32(3),
-                                Direccion = reader.GetString(4),
-                                FechaNac = reader.GetDateTime(5)
+                                Contraseña = reader.GetString(4),    // Mapea 'contraseña'
+                                Rol = reader.GetString(5)            // Mapea 'rol'
                             }; 
 
                             usuarios.Add(usuario);
@@ -47,15 +46,15 @@ namespace AA1.Repositories
             return usuarios;
         }
 
-        public async Task<Usuario> GetByIdAsync(int idUsuario)
+        public async Task<Usuario?> GetByIdAsync(int idUsuario)
         {
-            Usuario usuario = null;
+            Usuario? usuario = null;
 
             using (var connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
 
-                string query = "SELECT idUsuario, nombre, apellido, telefono, direccion, fechaNac FROM USUARIOS WHERE IdUsuario = @IdUsuario";
+                string query = "SELECT idUsuario, usuario, email, telefono, contraseña, rol FROM USUARIOS WHERE idUsuario = @IdUsuario";
                 using (var command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@IdUsuario", idUsuario);
@@ -67,11 +66,11 @@ namespace AA1.Repositories
                             usuario = new Usuario
                             {
                                 IdUsuario = reader.GetInt32(0),
-                                Nombre = reader.GetString(1),
-                                Apellido = reader.GetString(2),
+                                UsuarioNombre = reader.GetString(1),
+                                Email = reader.GetString(2),
                                 Telefono = reader.GetInt32(3),
-                                Direccion = reader.GetString(4),
-                                FechaNac = reader.GetDateTime(5)
+                                Contraseña = reader.GetString(4),
+                                Rol = reader.GetString(5)
                             };
                         }
                     }
@@ -86,18 +85,18 @@ namespace AA1.Repositories
             {
                 await connection.OpenAsync();
 
-                // QUITAMOS idUsuario del INSERT
-                string query = @"INSERT INTO USUARIOS (nombre, apellido, telefono, direccion, fechaNac) 
+                // CAMBIO: Query adaptada a los campos de la nueva tabla
+                string query = @"INSERT INTO USUARIOS (usuario, email, telefono, contraseña, rol) 
                                 OUTPUT INSERTED.idUsuario
-                                VALUES (@nombre, @apellido, @telefono, @direccion, @fechaNac)";
+                                VALUES (@usuario, @email, @telefono, @contraseña, @rol)";
                 
                 using (var command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@nombre", usuario.Nombre);
-                    command.Parameters.AddWithValue("@apellido", usuario.Apellido);
+                    command.Parameters.AddWithValue("@usuario", usuario.UsuarioNombre);
+                    command.Parameters.AddWithValue("@email", usuario.Email);
                     command.Parameters.AddWithValue("@telefono", usuario.Telefono);
-                    command.Parameters.AddWithValue("@direccion", usuario.Direccion);
-                    command.Parameters.AddWithValue("@fechaNac", usuario.FechaNac);
+                    command.Parameters.AddWithValue("@contraseña", usuario.Contraseña);
+                    command.Parameters.AddWithValue("@rol", usuario.Rol);
 
                     var newId = await command.ExecuteScalarAsync();
                     usuario.IdUsuario = Convert.ToInt32(newId);
@@ -111,15 +110,24 @@ namespace AA1.Repositories
             {
                 await connection.OpenAsync();
 
-                string query = "UPDATE USUARIOS SET idUsuario = @idUsuario, nombre = @nombre, apellido = @apellido, telefono = @telefono, direccion =@direccion, fechaNac = @fechaNac WHERE IdUsuario = @IdUsuario";
+                // CAMBIO: No se debe intentar actualizar el IdUsuario en el SET. 
+                // Se actualizan los campos nuevos.
+                string query = @"UPDATE USUARIOS 
+                                 SET usuario = @usuario, 
+                                     email = @email, 
+                                     telefono = @telefono, 
+                                     contraseña = @contraseña, 
+                                     rol = @rol 
+                                 WHERE idUsuario = @IdUsuario";
+
                 using (var command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@idUsuario", usuario.IdUsuario);
-                    command.Parameters.AddWithValue("@nombre", usuario.Nombre);
-                    command.Parameters.AddWithValue("@apellido", usuario.Apellido);
+                    command.Parameters.AddWithValue("@IdUsuario", usuario.IdUsuario);
+                    command.Parameters.AddWithValue("@usuario", usuario.UsuarioNombre);
+                    command.Parameters.AddWithValue("@email", usuario.Email);
                     command.Parameters.AddWithValue("@telefono", usuario.Telefono);
-                    command.Parameters.AddWithValue("@direccion", usuario.Direccion);
-                    command.Parameters.AddWithValue("@fechaNac", usuario.FechaNac);
+                    command.Parameters.AddWithValue("@contraseña", usuario.Contraseña);
+                    command.Parameters.AddWithValue("@rol", usuario.Rol);
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -132,16 +140,14 @@ namespace AA1.Repositories
             {
                 await connection.OpenAsync();
 
-                string query = "DELETE FROM USUARIOS WHERE IdUsuario = @IdUsuario";
+                string query = "DELETE FROM USUARIOS WHERE idUsuario = @IdUsuario";
                 using (var command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@IdUsuario", idUsuario);
-
                     await command.ExecuteNonQueryAsync();
                 }
             }
         }
-
 
         public async Task InicializarDatosAsync()
         {
@@ -149,38 +155,33 @@ namespace AA1.Repositories
             {
                 await connection.OpenAsync();
 
-                // Comando SQL para insertar datos iniciales
+                // CAMBIO: Datos iniciales adaptados a la lógica de Auth (admin/user)
                 var query = @"
-                    INSERT INTO USUARIOS (idUsuario, nombre, apellido, telefono, direccion, fechaNac)
-                    VALUES 
-                    (@idUsuario1, @nombre1, @apellido1, @telefono1, @direccion1, @fechaNac1),
-                    (@idUsuario2, @nombre2, @apellido2, @telefono2, @direccion2, @fechaNac2)";
+                    IF (SELECT COUNT(*) FROM USUARIOS) = 0
+                    BEGIN
+                        INSERT INTO USUARIOS (usuario, email, telefono, contraseña, rol)
+                        VALUES 
+                        (@usuario1, @email1, @telefono1, @pass1, @rol1),
+                        (@usuario2, @email2, @telefono2, @pass2, @rol2)
+                    END";
 
                 using (var command = new SqlCommand(query, connection))
                 {
-                    // Parámetros para el primer bebida
-                    command.Parameters.AddWithValue("@idUsuario1", 1);
-                    command.Parameters.AddWithValue("@nombre1", "Ana");
-                    command.Parameters.AddWithValue("@apellido1", "García");
-                    command.Parameters.AddWithValue("@telefono1", 600123456);
-                    command.Parameters.AddWithValue("@direccion1", "Calle Mayor 10");
-                    command.Parameters.AddWithValue("@fechaNac1", "1990-05-15");
-                    
+                    command.Parameters.AddWithValue("@usuario1", "admin");
+                    command.Parameters.AddWithValue("@email1", "admin@pistas.com");
+                    command.Parameters.AddWithValue("@telefono1", 600000001);
+                    command.Parameters.AddWithValue("@pass1", "admin123");
+                    command.Parameters.AddWithValue("@rol1", "admin");
 
-                    // Parámetros para el segundo bebida
-                    command.Parameters.AddWithValue("@idUsuario2", 2);
-                    command.Parameters.AddWithValue("@nombre2", "Luis");
-                    command.Parameters.AddWithValue("@apellido2", "Martínez");
-                    command.Parameters.AddWithValue("@telefono2", 600654321);
-                    command.Parameters.AddWithValue("@direccion2", "Av. Goya 22");
-                    command.Parameters.AddWithValue("@fechaNac2", "1985-11-30");
+                    command.Parameters.AddWithValue("@usuario2", "user");
+                    command.Parameters.AddWithValue("@email2", "user@pistas.com");
+                    command.Parameters.AddWithValue("@telefono2", 600000002);
+                    command.Parameters.AddWithValue("@pass2", "user123");
+                    command.Parameters.AddWithValue("@rol2", "user");
 
                     await command.ExecuteNonQueryAsync();
                 }
             }
         }
-
-
     }
-
 }
