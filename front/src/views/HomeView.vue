@@ -1,40 +1,45 @@
 <template>
-  <v-container>
-    <v-row class="text-center mt-5">
-      <v-col cols="12">
-        <h1 class="text-h4 mb-4">Nuestras Pistas Disponibles</h1>
-        <v-divider class="mb-6"></v-divider>
-      </v-col>
-    </v-row>
+  <div class="container">
+    <h2>Listado de Pistas Disponibles</h2>
 
-    <v-row v-if="pistaStore.loading" justify="center">
-      <v-progress-circular indeterminate color="primary"></v-progress-circular>
-    </v-row>
+    <p v-if="pistaStore.loading">Consultando base de datos...</p>
 
-    <v-row v-else-if="pistaStore.pistas.length > 0">
-      <v-col v-for="pista in pistaStore.pistas" :key="pista.idPista" cols="12" sm="6" md="4">
-        <PistaCard :pista="pista" />
-      </v-col>
-    </v-row>
+    <p v-else-if="pistaStore.error" style="color: red;">
+      No se pudo cargar el listado: {{ pistaStore.error }}
+    </p>
 
-    <v-row v-else justify="center">
-      <v-col cols="12" md="6">
-        <v-alert type="info" variant="tonal">
-          No hay pistas disponibles en este momento. Revisa la conexión al puerto 3000.
-        </v-alert>
-      </v-col>
-    </v-row>
-  </v-container>
+    <table v-else class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Deporte</th>
+          <th>Precio/Hora</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="pista in pistaStore.pistas" :key="pista.idPista">
+          <td>{{ pista.nombre }}</td>
+          <td>{{ pista.tipo }}</td>
+          <td>{{ pista.precioHora }}€</td>
+          <td>
+            <span v-if="pista.activa">Disponible</span>
+            <span v-else>En mantenimiento</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
-<script setup lang="ts">
-import { onMounted } from 'vue'
-import { usePistaStore } from '../stores/pistaStore'
-import PistaCard from '../components/PistaCard.vue'
+<script setup>
+import { onMounted } from 'vue';
+import { usePistaStore } from '@/stores/pistaStore';
 
-const pistaStore = usePistaStore()
+const pistaStore = usePistaStore();
 
-onMounted(async () => {
-  await pistaStore.fetchPistas()
-})
+// Esto es lo que "dispara" la acción al cargar la web
+onMounted(() => {
+  pistaStore.fetchPistas();
+});
 </script>

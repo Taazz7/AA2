@@ -1,46 +1,25 @@
-import { defineStore } from 'pinia'
-
-export interface Pista {
-  idPista?: number
-  nombre: string
-  tipo: string
-  direccion: string
-  activa: boolean
-  precioHora: number
-}
+import { defineStore } from 'pinia';
 
 export const usePistaStore = defineStore('pista', {
   state: () => ({
-    pistas: [] as Pista[],
+    pistas: [] as any[],
     loading: false
   }),
   actions: {
     async fetchPistas() {
-      this.loading = true
+      this.loading = true;
       try {
-        const response = await fetch('http://localhost:3000/api/Pistas')
-        // CORRECCIÓN: Usar .json() en lugar de .data()
-        this.pistas = await response.json()
-      } catch (error) {
-        console.error("Error cargando pistas:", error)
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // AÑADE ESTA ACCIÓN PARA ELIMINAR EL ERROR ROJO
-    async deletePista(id: number) {
-      try {
-        const response = await fetch(`http://localhost:3000/api/pistas/${id}`, { 
-          method: 'DELETE' 
-        })
+        // Usamos el puerto 3000 que vemos en Swagger
+        const response = await fetch('http://localhost:3000/api/Pista');
         if (response.ok) {
-          // Actualizamos la lista localmente para que desaparezca de la pantalla
-          this.pistas = this.pistas.filter(p => p.idPista !== id)
+          this.pistas = await response.json();
+          console.log("Datos recibidos:", this.pistas);
         }
       } catch (error) {
-        console.error("Error al borrar:", error)
+        console.error("Error al conectar con el puerto 3000:", error);
+      } finally {
+        this.loading = false;
       }
     }
   }
-})  
+});
