@@ -21,11 +21,11 @@ GO
 -- 2. Recrear las tablas
 CREATE TABLE AA1.dbo.USUARIOS (
     idUsuario INT PRIMARY KEY IDENTITY(1,1),
-    nombre VARCHAR(50),
-    apellido VARCHAR(50),
+    usuario VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
     telefono INT,
-    direccion VARCHAR(100),
-    fechaNac DATE
+    contraseña VARCHAR(100),
+    rol VARCHAR(20) NOT NULL
 );
 
 GO
@@ -79,9 +79,10 @@ CREATE TABLE AA1.dbo.MANTENIMIENTOS (
 GO
 
 -- 3. Insertar datos de ejemplo usando rutas absolutas
-INSERT INTO AA1.dbo.USUARIOS (nombre, apellido, telefono, direccion, fechaNac) 
-VALUES ('Ana', 'García', 600123456, 'Calle Mayor 10', '1990-05-15'),
-       ('Luis', 'Martínez', 600654321, 'Av. Goya 22', '1985-11-30');
+INSERT INTO AA1.dbo.USUARIOS (usuario, email, telefono, contraseña, rol) 
+VALUES ('admin', 'admin@pistas.com', 600000000, 'admin123', 'admin'),
+       ('Javy', 'admin2@pistas.com', 600700000, '1234', 'admin'),
+       ('user', 'user@pistas.com', 611223344, 'user123', 'user');
 
 GO
 

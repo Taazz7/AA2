@@ -3,22 +3,24 @@ using AA1.Controllers;
 using AA1.Services;
 using Microsoft.Data.SqlClient;
 using System.IO;
-using System.Text.RegularExpressions; // IMPORTANTE: Nueva librería para el Regex
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuración de red para Docker
+// --- CONFIGURACIÓN DE RED Y PUERTOS ---
 builder.WebHost.UseUrls("http://*:3000");
 
 var connectionString = builder.Configuration.GetConnectionString("AA1");
 
 // --- INYECCIÓN DE DEPENDENCIAS ---
+// Repositorios
 builder.Services.AddScoped<IMantenimientoRepository, MantenimientoRepository>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
 builder.Services.AddScoped<IPistaRepository, PistaRepository>();
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
+// Servicios
 builder.Services.AddScoped<IMantenimientoService, MantenimientoService>();
 builder.Services.AddScoped<IMaterialService, MaterialService>();
 builder.Services.AddScoped<IPistaService, PistaService>();
@@ -29,9 +31,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// --- CONFIGURACIÓN DE CORS ---
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowAll", policy => {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
@@ -47,7 +52,6 @@ using (var scope = app.Services.CreateScope())
     builderDb.InitialCatalog = "master"; 
     string masterConn = builderDb.ConnectionString;
 
-    bool initialized = false;
     for (int i = 0; i < 15; i++) 
     {
         try
@@ -58,8 +62,6 @@ using (var scope = app.Services.CreateScope())
             if (File.Exists(scriptPath))
             {
                 string script = File.ReadAllText(scriptPath);
-                
-                // CAMBIO CLAVE: Regex para que solo corte en "GO" aislados y no en palabras como "Goya"
                 var parts = Regex.Split(script, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
                 
                 foreach (var part in parts)
@@ -72,20 +74,37 @@ using (var scope = app.Services.CreateScope())
                     }
                 }
                 logger.LogInformation(">>> SQL: Script CreateDB ejecutado correctamente.");
-                initialized = true;
             }
 
-            // --- INSERCIÓN DE EMERGENCIA ---
+            // --- INSERCIÓN DE EMERGENCIA (Pistas y Usuarios) ---
             using (var checkConn = new SqlConnection(connectionString)) 
             {
                 checkConn.Open();
-                string checkQuery = "IF (SELECT COUNT(*) FROM PISTAS) = 0 " +
-                                   "INSERT INTO PISTAS (nombre, tipo, direccion, activa, precioHora) " +
-                                   "VALUES ('Pista Manual Program', 'Multiuso', 'Creada desde C#', 1, 15)";
-                using var cmd = new SqlCommand(checkQuery, checkConn);
-                cmd.ExecuteNonQuery();
+                
+                // Inserción de Usuarios
+                string checkUsersQuery = @"
+                    IF (SELECT COUNT(*) FROM USUARIOS) = 0 
+                    BEGIN
+                        INSERT INTO USUARIOS (usuario, email, telefono, contraseña, rol) 
+                        VALUES ('admin', 'admin@pistas.com', 600000000, 'admin123', 'admin');
+                        
+                        INSERT INTO USUARIOS (usuario, email, telefono, contraseña, rol) 
+                        VALUES ('user', 'user@pistas.com', 611223344, 'user123', 'user');
+                    END";
+                using var cmdUser = new SqlCommand(checkUsersQuery, checkConn);
+                cmdUser.ExecuteNonQuery();
+
+                // Inserción de Pistas
+                string checkPistasQuery = @"
+                    IF (SELECT COUNT(*) FROM PISTAS) = 0 
+                    BEGIN
+                        INSERT INTO PISTAS (nombre, tipo, direccion, activa, precioHora) 
+                        VALUES ('Pista Central', 'Tenis', 'Calle Principal 1', 1, 25),
+                               ('Pista Norte', 'Padel', 'Calle Norte 2', 1, 20);
+                    END";
+                using var cmdPista = new SqlCommand(checkPistasQuery, checkConn);
+                cmdPista.ExecuteNonQuery();
             }
-            
             break; 
         }
         catch (Exception ex)
@@ -96,7 +115,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// --- CONFIGURACIÓN DE MIDDLEWARE ---
+// --- CONFIGURACIÓN DE MIDDLEWARE (EL ORDEN IMPORTA) ---
 app.UseSwagger();
 app.UseSwaggerUI(c => {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "AA1 API V1");
@@ -105,13 +124,9 @@ app.UseSwaggerUI(c => {
 
 app.UseRouting();
 
-app.UseCors("AllowAll"); 
+app.UseCors("AllowAll");
 
-//app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
 app.MapControllers();
+
 app.Run();
