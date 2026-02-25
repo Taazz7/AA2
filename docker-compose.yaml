@@ -1,6 +1,9 @@
 services:
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: aa2-db-1
+    networks:
+      - aa2-net
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=yourStrong(!)Password
@@ -11,15 +14,18 @@ services:
     build:
       context: ./back
       dockerfile: Dockerfile
+    container_name: aa2-backend-1
     ports:
-      - "3000:3000" # Mapeamos el puerto 3000 del contenedor al 3000 de tu PC
+      - "3000:3000"
     depends_on:
       - db
+    networks:
+      - aa2-net
     environment:
       - DB_SERVER=db
       - DB_PASSWORD=yourStrong(!)Password
       - DB_NAME=AA1
-      - ASPNETCORE_URLS=http://+:3000 # IMPORTANTE: Obliga a C# a escuchar en el 3000
+      - ASPNETCORE_URLS=http://+:3000
     volumes:
       - ./back/CreateDB.sql:/app/CreateDB.sql 
 
@@ -27,9 +33,16 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile
+    container_name: aa2-frontend-1
     ports:
       - "8080:5173"
     depends_on:
       - backend
+    networks:
+      - aa2-net
     environment:
       - VITE_API_URL=http://localhost:3000/api
+
+networks:
+  aa2-net:
+    driver: bridge

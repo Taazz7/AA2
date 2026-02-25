@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Models;
 
+[Table("Pistas")]
 public class Pista {
 
     public int IdPista  {get;set;}

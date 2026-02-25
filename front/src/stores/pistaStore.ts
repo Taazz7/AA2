@@ -18,7 +18,7 @@ export const usePistaStore = defineStore('pista', {
     async fetchPistas() {
       this.loading = true
       try {
-        const response = await fetch('http://localhost:3000/api/pistas')
+        const response = await fetch('http://localhost:3000/api/Pistas')
         // CORRECCIÓN: Usar .json() en lugar de .data()
         this.pistas = await response.json()
       } catch (error) {

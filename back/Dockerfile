@@ -14,6 +14,7 @@ RUN dotnet publish "AA1.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY CreateDB.sql .
 
 # Obligamos a la aplicación a escuchar en el puerto 3000 en todas las interfaces de red
 ENV ASPNETCORE_URLS=http://+:3000

@@ -1,6 +1,8 @@
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'AA1')
 CREATE DATABASE AA1;
-
+GO
 USE AA1;
+GO
 
 
 -- 1. Eliminar todas las tablas en orden correcto (respetando foreign keys)
