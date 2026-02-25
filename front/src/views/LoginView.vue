@@ -2,44 +2,51 @@
   <v-container class="fill-height" fluid>
     <v-row align="center" justify="center">
       <v-col cols="12" sm="8" md="4">
-        <v-card class="elevation-12">
+        <v-card class="elevation-12" rounded="lg">
           <v-toolbar color="primary" dark flat>
-            <v-toolbar-title>Acceso al Centro Deportivo</v-toolbar-title>
+            <v-toolbar-title class="text-h5">Acceso al Centro</v-toolbar-title>
           </v-toolbar>
           
-          <v-card-text>
+          <v-card-text class="pt-6">
             <v-form @submit.prevent="onSubmit">
               <v-text-field
                 v-model="usuario"
                 v-bind="usuarioAttrs"
-                label="Usuario"
-                prepend-icon="mdi-account"
+                label="Usuario o Email"
+                placeholder="admin o admin@pistas.com"
+                prepend-inner-icon="mdi-account"
                 variant="outlined"
                 :error-messages="errors.usuario"
+                class="mb-2"
               ></v-text-field>
 
               <v-text-field
                 v-model="contraseña"
                 v-bind="contraseñaAttrs"
                 label="Contraseña"
-                prepend-icon="mdi-lock"
+                prepend-inner-icon="mdi-lock"
                 type="password"
                 variant="outlined"
                 :error-messages="errors.contraseña"
               ></v-text-field>
 
-              <v-alert v-if="serverError" type="error" variant="tonal" class="mt-3">
+              <v-alert v-if="serverError" type="error" variant="tonal" closable class="mt-4">
                 {{ serverError }}
               </v-alert>
             </v-form>
           </v-card-text>
 
-          <v-card-actions>
-            <v-btn color="grey" variant="text" @click="router.push('/')">Volver</v-btn>
+          <v-divider></v-divider>
+
+          <v-card-actions class="pa-4">
+            <v-btn color="grey-darken-1" variant="text" @click="router.push('/')">
+              Volver
+            </v-btn>
             <v-spacer></v-spacer>
             <v-btn 
               color="primary" 
               variant="elevated" 
+              size="large"
               :loading="isSubmitting"
               @click="onSubmit"
             >
@@ -63,13 +70,12 @@ const router = useRouter();
 const authStore = useAuthStore();
 const serverError = ref('');
 
-// 1. Esquema de validación (Requisito obligatorio del PDF)
+// 1. Esquema de validación Yup
 const schema = yup.object({
-  usuario: yup.string().required('El usuario es obligatorio'),
-  contraseña: yup.string().min(4, 'Mínimo 4 caracteres').required('La contraseña es obligatoria'),
+  usuario: yup.string().required('Introduce tu usuario o email'),
+  contraseña: yup.string().min(4, 'La contraseña es demasiado corta').required('Introduce tu contraseña'),
 });
 
-// 2. Configuración del formulario con VeeValidate
 const { errors, defineField, handleSubmit, isSubmitting } = useForm({
   validationSchema: schema,
 });
@@ -77,29 +83,35 @@ const { errors, defineField, handleSubmit, isSubmitting } = useForm({
 const [usuario, usuarioAttrs] = defineField('usuario');
 const [contraseña, contraseñaAttrs] = defineField('contraseña');
 
-// 3. Lógica de envío
+// Lógica de envío con soporte para Usuario/Email
 const onSubmit = handleSubmit(async (values) => {
   serverError.value = '';
   try {
     const response = await fetch('http://localhost:3000/api/Usuario');
-    if (!response.ok) throw new Error("Error de red");
+    if (!response.ok) throw new Error("Fallo de red");
     
     const usuarios = await response.json();
 
-    // Buscamos al usuario en la tabla USUARIOS según tus campos
+    /*
+       Nota: Usamos nombres en minúscula (camelCase) porque es como los envía .NET por defecto.
+    */
     const userFound = usuarios.find((u: any) => 
-      u.usuario === values.usuario && u.contraseña === values.contraseña
+      (u.usuarioNombre === values.usuario || u.email === values.usuario) && 
+      u.contraseña === values.contraseña
     );
 
     if (userFound) {
-      authStore.login(userFound.usuario, userFound.rol);
+      // Guardamos en el Store de Pinia
+      authStore.login(userFound.usuarioNombre, userFound.rol);
+      
+      // Redirección exitosa
       router.push('/');
     } else {
-      serverError.value = "Credenciales incorrectas";
+      serverError.value = "Los datos no coinciden con ningún registro";
     }
   } catch (error) {
-    serverError.value = "Error al conectar con el servidor";
-    console.error(error);
+    serverError.value = "No se pudo conectar con el servidor. Verifica Docker.";
+    console.error("Error Login:", error);
   }
 });
 </script>

@@ -1,28 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
 import HomeView from '../views/HomeView.vue'
+import { useAuthStore } from '../stores/authStore'
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: HomeView,
-    // Meta layout para mostrar Header/Footer estándar
-    meta: { layout: 'public' }
+    component: HomeView
   },
   {
     path: '/login',
     name: 'login',
-    component: () => import('../views/LoginView.vue'),
-    // Meta layout 'blank' para cumplir requisito de no tener header/footer 
-    meta: { layout: 'blank' }
+    component: () => import('../views/LoginView.vue')
   },
   {
     path: '/admin',
     name: 'admin',
     component: () => import('../views/AdminView.vue'),
-    // Requiere admin y tiene layout propio
-    meta: { layout: 'admin', requiresAdmin: true }
+    meta: { requiresAdmin: true }
   }
 ]
 
@@ -31,14 +26,17 @@ const router = createRouter({
   routes
 })
 
-// Guard de navegación para proteger la ruta de Admin 
+// GUARD DE SEGURIDAD CORREGIDO
 router.beforeEach((to, from, next) => {
+  // Accedemos al store aquí adentro, donde Pinia ya está garantizado
   const authStore = useAuthStore()
 
-  // Si la ruta requiere ser administrador y el usuario no lo es
-  if (to.meta.requiresAdmin && authStore.userRole !== 'admin') {
-    // Bloqueamos acceso y redirigimos al Home (funcionalidad extra de seguridad)
-    next({ name: 'home' })
+  if (to.matched.some(record => record.meta.requiresAdmin)) {
+    if (!authStore.isLogged || authStore.userRole !== 'admin') {
+      next({ name: 'login' })
+    } else {
+      next()
+    }
   } else {
     next()
   }
