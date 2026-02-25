@@ -1,16 +1,48 @@
 <template>
-  <v-app-bar color="primary">
-    <v-toolbar-title>Reserva tu pista</v-toolbar-title>
+  <v-app-bar color="blue" density="compact" elevation="0">
+    <v-app-bar-title class="text-white font-weight-bold">
+      Gestión de Pistas
+    </v-app-bar-title>
+    
     <v-spacer></v-spacer>
-    
-    <v-btn to="/" variant="text">Inicio</v-btn>
-    
-    <v-btn v-if="authStore.userRole === 'admin'" to="/admin" variant="text">
-      Admin
-    </v-btn>
 
-    <v-btn v-if="!authStore.isLogged" to="/login" variant="text">Login</v-btn>
-    <v-btn v-else @click="handleLogout" variant="text">Salir</v-btn>
+    <div class="d-flex align-center">
+      
+      <template v-if="authStore.isLogged">
+        <span class="text-white mr-4 text-body-2">
+          Bienvenido, <strong>{{ authStore.userName }}</strong>
+        </span>
+
+        <v-btn to="/" variant="text" color="white" class="mr-2">
+          INICIO
+        </v-btn>
+
+        <v-btn 
+          v-if="authStore.isAdmin" 
+          to="/admin" 
+          variant="tonal" 
+          color="white" 
+          class="mr-2"
+        >
+          PANEL ADMIN
+        </v-btn>
+
+        <v-btn 
+          @click="handleLogout" 
+          variant="outlined" 
+          color="white" 
+          size="small"
+        >
+          CERRAR SESIÓN
+        </v-btn>
+      </template>
+
+      <template v-else>
+        <v-btn to="/" variant="text" color="white" class="mr-2">INICIO</v-btn>
+        <v-btn to="/login" variant="text" color="white">LOGIN</v-btn>
+      </template>
+      
+    </div>
   </v-app-bar>
 </template>
 
@@ -21,8 +53,16 @@ import { useRouter } from 'vue-router';
 const authStore = useAuthStore();
 const router = useRouter();
 
+// Función para cerrar sesión y volver a la raíz
 const handleLogout = () => {
   authStore.logout();
   router.push('/');
 };
 </script>
+
+<style scoped>
+/* Forzamos que los botones de Vuetify no tengan sombras pesadas si no quieres */
+.v-btn {
+  font-weight: 500;
+}
+</style>
