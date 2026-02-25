@@ -7,7 +7,7 @@
             <v-toolbar-title>Acceso al Centro Deportivo</v-toolbar-title>
           </v-toolbar>
           <v-card-text>
-            <v-form @submit.prevent="handleLogin">
+            <v-form>
               <v-text-field
                 label="Usuario"
                 prepend-icon="mdi-account"
@@ -24,9 +24,14 @@
             </v-form>
           </v-card-text>
           <v-card-actions>
+            <v-btn color="grey" variant="text" @click="goBack">
+              Volver
+            </v-btn>
             <v-spacer></v-spacer>
             <v-btn color="secondary" variant="text">Registrarse</v-btn>
-            <v-btn color="primary" @click="handleLogin">Entrar</v-btn>
+            <v-btn color="primary" variant="elevated" @click="handleLogin">
+              Entrar
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -39,8 +44,12 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
+const goBack = () => {
+  router.back(); // Vuelve a la página anterior en el historial
+};
+
 const handleLogin = () => {
-  console.log("Login pulsado");
-  router.push('/'); // Redirigir al home tras el login
+  // Aquí irá la validación con Yup/VeeValidate próximamente
+  router.push('/'); 
 };
 </script>
