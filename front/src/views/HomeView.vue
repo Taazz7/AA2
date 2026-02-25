@@ -2,7 +2,7 @@
   <v-container>
     <h1 class="text-h4 mb-6">Nuestras Pistas</h1>
     
-    <PistaList />
+    <PistaList :isAdmin="false" />
     
     <v-alert v-if="store.pistas.length === 0" type="info">
       No hay pistas disponibles o cargando...
