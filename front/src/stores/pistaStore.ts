@@ -5,47 +5,79 @@ export const usePistaStore = defineStore('pista', () => {
   const pistas = ref<any[]>([]);
   const isLoading = ref(false);
 
+  // --- ACCIÓN: Cargar Pistas ---
   const fetchPistas = async () => {
     isLoading.value = true;
     try {
       const response = await fetch('http://localhost:3000/api/Pista');
       if (response.ok) pistas.value = await response.json();
-    } catch (e) { console.error(e); }
-    finally { isLoading.value = false; }
+    } catch (err) {
+      console.error("Error al cargar:", err);
+    } finally {
+      isLoading.value = false;
+    }
   };
 
-  const editarPista = async (pista: any) => {
+  // --- ACCIÓN: Crear Nueva Pista (POST) ---
+  const crearPista = async (nuevaPista: any) => {
     isLoading.value = true;
     try {
-      const response = await fetch(`http://localhost:3000/api/Pista/${pista.idPista}`, {
-        method: 'PUT',
+      const response = await fetch('http://localhost:3000/api/Pista', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pista)
+        body: JSON.stringify(nuevaPista)
       });
       if (response.ok) {
-        const i = pistas.value.findIndex(p => p.idPista === pista.idPista);
-        if (i !== -1) pistas.value[i] = { ...pista };
+        const creada = await response.json();
+        pistas.value.push(creada); // Actualización reactiva instantánea
         return true;
       }
-    } catch (e) { console.error(e); }
-    finally { isLoading.value = false; }
+    } catch (err) {
+      console.error("Error al crear:", err);
+    } finally {
+      isLoading.value = false;
+    }
     return false;
   };
 
-  const borrarPista = async (id: number) => {
-    if (!confirm("⚠️ ¿Estás seguro de eliminar esta pista definitivamente?")) return;
-    
+  // --- ACCIÓN: Editar Pista (PUT) ---
+  const editarPista = async (pistaEditada: any) => {
     isLoading.value = true;
     try {
-      const res = await fetch(`http://localhost:3000/api/Pista/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        pistas.value = pistas.value.filter(p => p.idPista !== id);
-      } else {
-        alert("No se pudo borrar la pista. Comprueba la conexión.");
+      const response = await fetch(`http://localhost:3000/api/Pista/${pistaEditada.idPista}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pistaEditada)
+      });
+      if (response.ok) {
+        // Buscamos y actualizamos en la lista local
+        const index = pistas.value.findIndex(p => p.idPista === pistaEditada.idPista);
+        if (index !== -1) pistas.value[index] = { ...pistaEditada };
+        return true;
       }
-    } catch (e) { alert("Error de servidor al intentar borrar."); }
-    finally { isLoading.value = false; }
+    } catch (err) {
+      console.error("Error al editar:", err);
+    } finally {
+      isLoading.value = false;
+    }
+    return false;
   };
 
-  return { pistas, isLoading, fetchPistas, editarPista, borrarPista };
+  // --- ACCIÓN: Borrar Pista (DELETE) ---
+  const borrarPista = async (id: number) => {
+    if (!confirm("⚠️ ¿Estás seguro de eliminar esta pista definitivamente?")) return;
+    isLoading.value = true;
+    try {
+      const response = await fetch(`http://localhost:3000/api/Pista/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        pistas.value = pistas.value.filter(p => p.idPista !== id);
+      }
+    } catch (err) {
+      console.error("Error al borrar:", err);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  return { pistas, isLoading, fetchPistas, crearPista, editarPista, borrarPista };
 });
