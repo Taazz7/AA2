@@ -36,7 +36,6 @@
     </div>
 
     <v-card theme="dark" class="rounded-lg" variant="outlined" style="border-color: #333;">
-      <v-progress-linear v-if="reservaStore.isLoading" indeterminate color="green"></v-progress-linear>
       <v-table theme="dark">
         <thead>
           <tr>
@@ -53,28 +52,46 @@
             :key="reserva.idReserva" 
             :reserva="reserva"
           />
-          <tr v-if="reservaStore.reservas.length === 0">
-            <td colspan="5" class="text-center py-4 text-grey">No hay reservas registradas.</td>
-          </tr>
         </tbody>
       </v-table>
     </v-card>
 
-    <v-dialog v-model="dialogo" max-width="500px">
+    <v-dialog v-model="dialogo" max-width="500px" persistent>
       <v-card theme="dark" class="rounded-xl">
         <v-card-title class="bg-blue text-white pa-4">
           {{ editando ? '✎ Editar Pista' : '➕ Nueva Pista' }}
         </v-card-title>
+        
         <v-card-text class="pt-6">
-          <v-text-field v-model="form.nombre" label="Nombre" variant="outlined" density="compact"></v-text-field>
-          <v-text-field v-model="form.tipo" label="Deporte" variant="outlined" density="compact"></v-text-field>
-          <v-text-field v-model.number="form.precioHora" label="Precio/Hora" type="number" variant="outlined" density="compact"></v-text-field>
-          <v-switch v-model="form.activa" label="Pista Activa" color="green" inset></v-switch>
+          <v-text-field
+            v-model="nombre"
+            label="Nombre"
+            :error-messages="errors.nombre"
+            variant="outlined"
+          ></v-text-field>
+
+          <v-text-field
+            v-model="tipo"
+            label="Deporte"
+            :error-messages="errors.tipo"
+            variant="outlined"
+          ></v-text-field>
+
+          <v-text-field
+            v-model.number="precioHora"
+            label="Precio/Hora"
+            type="number"
+            :error-messages="errors.precioHora"
+            variant="outlined"
+          ></v-text-field>
+
+          <v-switch v-model="activa" label="Pista Activa" color="green" inset></v-switch>
         </v-card-text>
+
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="dialogo = false">Cancelar</v-btn>
-          <v-btn color="blue" variant="flat" @click="guardar">Guardar</v-btn>
+          <v-btn variant="text" @click="cerrarDialogo">Cancelar</v-btn>
+          <v-btn color="blue" variant="flat" @click="handleGuardar">Guardar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -85,38 +102,72 @@
 import { ref, onMounted } from 'vue';
 import { usePistaStore } from '../stores/pistaStore';
 import { useReservaStore } from '../stores/reservaStore';
-// IMPORTAMOS LOS NUEVOS COMPONENTES
 import PistaRow from '../components/PistaRow.vue';
 import ReservaRow from '../components/ReservaRow.vue';
 
+// Validación
+import { useForm, useField } from 'vee-validate';
+import * as yup from 'yup';
+
 const pistaStore = usePistaStore();
 const reservaStore = useReservaStore();
-
 const dialogo = ref(false);
 const editando = ref(false);
-const form = ref<any>({ nombre: '', tipo: '', precioHora: 0, activa: true });
+const idEdicion = ref<number | null>(null);
 
-onMounted(() => {
-  pistaStore.fetchPistas();
-  reservaStore.fetchReservas();
+// Esquema de validación
+const schema = yup.object({
+  nombre: yup.string().required('Requerido').min(3, 'Muy corto'),
+  tipo: yup.string().required('Requerido'),
+  precioHora: yup.number().required('Requerido').positive('Debe ser > 0'),
+  activa: yup.boolean()
+});
+
+const { errors, handleSubmit, resetForm, setValues } = useForm({
+  validationSchema: schema,
+  initialValues: { nombre: '', tipo: '', precioHora: 0, activa: true }
+});
+
+const { value: nombre } = useField<string>('nombre');
+const { value: tipo } = useField<string>('tipo');
+const { value: precioHora } = useField<number>('precioHora');
+const { value: activa } = useField<boolean>('activa');
+
+onMounted(async () => {
+  await pistaStore.fetchPistas();
+  await reservaStore.fetchReservas();
 });
 
 const abrirFormularioCrear = () => {
   editando.value = false;
-  form.value = { nombre: '', tipo: '', precioHora: 0, activa: true };
+  idEdicion.value = null;
+  resetForm({ values: { nombre: '', tipo: '', precioHora: 0, activa: true } });
   dialogo.value = true;
 };
 
 const abrirFormularioEditar = (pista: any) => {
   editando.value = true;
-  form.value = { ...pista };
+  idEdicion.value = pista.idPista;
+  setValues({
+    nombre: pista.nombre,
+    tipo: pista.tipo,
+    precioHora: pista.precioHora,
+    activa: pista.activa
+  });
   dialogo.value = true;
 };
 
-const guardar = async () => {
+const handleGuardar = handleSubmit(async (values) => {
+  const payload = { ...values, idPista: idEdicion.value };
   const ok = editando.value 
-    ? await pistaStore.editarPista(form.value) 
-    : await pistaStore.crearPista(form.value);
-  if (ok) dialogo.value = false;
+    ? await pistaStore.editarPista(payload) 
+    : await pistaStore.crearPista(payload);
+    
+  if (ok) cerrarDialogo();
+});
+
+const cerrarDialogo = () => {
+  dialogo.value = false;
+  resetForm();
 };
 </script>
