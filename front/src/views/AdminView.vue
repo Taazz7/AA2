@@ -12,7 +12,7 @@
       <v-table theme="dark">
         <thead>
           <tr>
-            <th>NOMBRE</th>
+            <th class="text-blue">ID</th> <th>NOMBRE</th>
             <th class="text-center">ESTADO</th>
             <th class="text-center">PRECIO/H</th>
             <th class="text-center">ACCIONES</th>
@@ -20,6 +20,7 @@
         </thead>
         <tbody>
           <tr v-for="pista in pistaStore.pistas" :key="pista.idPista">
+            <td class="text-blue font-weight-bold">#{{ pista.idPista }}</td>
             <td class="text-white">{{ pista.nombre }}</td>
             <td class="text-center">
               <v-chip size="x-small" :color="pista.activa ? 'green' : 'red'">
@@ -55,13 +56,10 @@
         <tbody>
           <tr v-for="reserva in reservaStore.reservas" :key="reserva.idReserva">
             <td>{{ new Date(reserva.fecha).toLocaleDateString() }}</td>
-            <td>Usuario #{{ reserva.idUsuario }}</td>
-            <td>Pista #{{ reserva.idPista }}</td>
+            <td>Usuario #{{ reserva.idUsuario?.idUsuario || reserva.idUsuario || '?' }}</td>
+            <td>Pista #{{ reserva.idPista?.idPista || reserva.idPista || '?' }}</td>
             <td class="text-center">{{ reserva.horas }} h</td>
             <td class="text-right text-green font-weight-bold">{{ reserva.precio }}€</td>
-          </tr>
-          <tr v-if="reservaStore.reservas.length === 0">
-            <td colspan="5" class="text-center py-4 text-grey">No hay reservas registradas.</td>
           </tr>
         </tbody>
       </v-table>
