@@ -1,18 +1,19 @@
-
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
 export const useAuthStore = defineStore('auth', () => {
   const isLogged = ref(false);
+  const userId = ref<number | null>(null);
   const userName = ref<string | null>(null);
   const userRole = ref<string | null>(null);
 
-  // Try-catch para evitar que un JSON mal formateado rompa la App
+  // Recuperar sesión al cargar la app
   try {
     const savedUser = localStorage.getItem('user_session');
     if (savedUser) {
       const data = JSON.parse(savedUser);
       isLogged.value = true;
+      userId.value = data.id;
       userName.value = data.name;
       userRole.value = data.role;
     }
@@ -23,21 +24,22 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAdmin = computed(() => userRole.value === 'admin');
 
-  const login = (name: string, role: string) => {
+  const login = (id: number, name: string, role: string) => {
     isLogged.value = true;
+    userId.value = id;
     userName.value = name;
     userRole.value = role;
-    localStorage.setItem('user_session', JSON.stringify({ name, role }));
+    localStorage.setItem('user_session', JSON.stringify({ id, name, role }));
   };
 
   const logout = () => {
     isLogged.value = false;
+    userId.value = null;
     userName.value = null;
     userRole.value = null;
     localStorage.removeItem('user_session');
-    // CAMBIO: Usamos router si es posible, o recarga limpia
     window.location.href = '/login';
   };
 
-  return { isLogged, userName, userRole, isAdmin, login, logout };
+  return { isLogged, userId, userName, userRole, isAdmin, login, logout };
 });
