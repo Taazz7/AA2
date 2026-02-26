@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 import HeaderComponent from './components/HeaderComponent.vue';
-// import FooterComponent from './components/FooterComponent.vue'; // Descomenta si tienes el archivo
+import FooterComponent from './components/FooterComponent.vue';
 
 const route = useRoute();
 </script>
