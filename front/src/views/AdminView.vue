@@ -11,15 +11,20 @@
       <thead>
         <tr>
           <th class="text-grey-lighten-1">NOMBRE</th>
-          <th class="text-grey-lighten-1 text-center">DEPORTE</th>
+          <th class="text-grey-lighten-1 text-center">ESTADO</th>
           <th class="text-grey-lighten-1 text-center">PRECIO/H</th>
           <th class="text-grey-lighten-1 text-center">ACCIONES</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="pista in pistaStore.pistas" :key="pista.idPista" style="border-bottom: 1px solid #333;">
+        <tr v-for="pista in pistaStore.pistas" :key="pista.idPista">
           <td class="text-white font-weight-bold">{{ pista.nombre }}</td>
-          <td class="text-center">{{ pista.tipo }}</td> <td class="text-center text-blue font-weight-bold">{{ pista.precioHora }}€</td>
+          <td class="text-center">
+            <v-chip size="x-small" :color="pista.activa ? 'green' : 'red'">
+              {{ pista.activa ? 'SÍ' : 'NO' }}
+            </v-chip>
+          </td>
+          <td class="text-center text-blue font-weight-bold">{{ pista.precioHora }}€</td>
           <td class="text-center pa-2">
             <v-btn color="blue-darken-2" size="small" class="mr-2 px-4" @click="abrirFormularioEditar(pista)">
               <span class="mr-1">✎</span> EDITAR
@@ -40,10 +45,18 @@
         
         <v-card-text class="pt-6">
           <v-text-field v-model="form.nombre" label="Nombre" variant="outlined" density="compact"></v-text-field>
-          <v-text-field v-model="form.tipo" label="Deporte (Tipo)" variant="outlined" density="compact"></v-text-field>
+          <v-text-field v-model="form.tipo" label="Deporte" variant="outlined" density="compact"></v-text-field>
           <v-text-field v-model="form.direccion" label="Dirección" variant="outlined" density="compact"></v-text-field>
           <v-text-field v-model.number="form.precioHora" label="Precio por Hora" type="number" variant="outlined" density="compact" suffix="€"></v-text-field>
-          <v-switch v-model="form.activa" label="Pista Activa" color="green" inset density="compact"></v-switch>
+          
+          <v-switch 
+            v-model="form.activa" 
+            label="Pista disponible para reserva" 
+            color="green" 
+            inset 
+            density="compact"
+            class="mt-2"
+          ></v-switch>
         </v-card-text>
 
         <v-card-actions class="pa-4">
@@ -77,7 +90,7 @@ const abrirFormularioCrear = () => {
 
 const abrirFormularioEditar = (pista: any) => {
   editando.value = true;
-  form.value = { ...pista }; // Copia para editar
+  form.value = { ...pista };
   dialogo.value = true;
 };
 

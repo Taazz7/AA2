@@ -18,13 +18,25 @@
           </v-card-subtitle>
           
           <v-card-text class="pa-0 mt-4 mb-4">
-            <p class="text-caption">Pista de alta calidad</p>
-            <v-chip size="x-small" color="green" class="mt-2">Activa</v-chip>
+            
+            <v-chip 
+              size="x-small" 
+              :color="pista.activa ? 'green' : 'red'" 
+              class="mt-2"
+            >
+              {{ pista.activa ? 'Activa' : 'Inactiva' }}
+            </v-chip>
           </v-card-text>
 
           <v-card-actions class="pa-0">
-            <v-btn block color="green-darken-1" variant="flat" class="text-white">
-              RESERVAR PISTA
+            <v-btn 
+              block 
+              :color="pista.activa ? 'green-darken-1' : 'grey-darken-2'" 
+              variant="flat" 
+              class="text-white"
+              :disabled="!pista.activa"
+            >
+              {{ pista.activa ? 'RESERVAR PISTA' : 'NO DISPONIBLE' }}
             </v-btn>
           </v-card-actions>
         </v-card>
