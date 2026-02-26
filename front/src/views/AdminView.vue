@@ -14,7 +14,7 @@
       <tbody>
         <tr v-for="pista in pistaStore.pistas" :key="pista.idPista" border>
           <td class="text-white font-weight-bold">{{ pista.nombre }}</td>
-          <td class="text-center">{{ pista.tipoPista }}</td>
+          <td class="text-center">{{ pista.tipo }}</td>
           <td class="text-center text-blue font-weight-bold">{{ pista.precioHora }}€</td>
           <td class="text-center pa-2">
             <v-btn 
@@ -46,7 +46,7 @@
         </v-card-title>
         <v-card-text class="pt-6">
           <v-text-field v-model="form.nombre" label="Nombre" variant="outlined"></v-text-field>
-          <v-text-field v-model="form.tipoPista" label="Deporte" variant="outlined"></v-text-field>
+          <v-text-field v-model="form.tipo" label="Deporte" variant="outlined"></v-text-field>
           <v-text-field v-model.number="form.precioHora" label="Precio" type="number" variant="outlined" suffix="€"></v-text-field>
         </v-card-text>
         <v-card-actions class="pa-4">

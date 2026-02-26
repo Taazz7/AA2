@@ -9,15 +9,13 @@
     <v-row v-else-if="pistaStore.pistas.length > 0">
       <v-col v-for="pista in pistaStore.pistas" :key="pista.idPista" cols="12" md="4">
         <v-card theme="dark" variant="outlined" class="pa-4" style="border-color: rgba(255,255,255,0.5);">
-          <v-card-title class="pa-0 text-h6 font-weight-bold">{{ pista.nombre }}</v-card-title>
-          <v-card-subtitle class="pa-0 mt-1">
-            {{ pista.tipoPista }} - {{ pista.precioHora }}€/h
-          </v-card-subtitle>
+          <v-card-title class="pa-0 text-h6 font-weight-bold">
+            {{ pista.nombre }} - {{ pista.tipo }}
+          </v-card-title>
           
-          <v-card-text class="pa-0 mt-4 mb-4">
-            <p class="text-caption">Pista de alta calidad</p>
-            <v-chip size="x-small" color="green" class="mt-2">Activa</v-chip>
-          </v-card-text>
+          <v-card-subtitle class="pa-0 mt-1">
+            Precio - {{ pista.precioHora }}€/h
+          </v-card-subtitle>
 
           <v-card-actions class="pa-0">
             <v-btn block color="green-darken-1" variant="flat" class="text-white">
