@@ -12,27 +12,21 @@
       <v-table theme="dark">
         <thead>
           <tr>
-            <th class="text-blue">ID</th> <th>NOMBRE</th>
+            <th class="text-blue">ID</th>
+            <th>NOMBRE</th>
             <th class="text-center">ESTADO</th>
             <th class="text-center">PRECIO/H</th>
             <th class="text-center">ACCIONES</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="pista in pistaStore.pistas" :key="pista.idPista">
-            <td class="text-blue font-weight-bold">#{{ pista.idPista }}</td>
-            <td class="text-white">{{ pista.nombre }}</td>
-            <td class="text-center">
-              <v-chip size="x-small" :color="pista.activa ? 'green' : 'red'">
-                {{ pista.activa ? 'SÍ' : 'NO' }}
-              </v-chip>
-            </td>
-            <td class="text-center text-blue font-weight-bold">{{ pista.precioHora }}€</td>
-            <td class="text-center">
-              <v-btn color="blue" size="small" variant="tonal" class="mr-2" @click="abrirFormularioEditar(pista)">EDITAR</v-btn>
-              <v-btn color="red" size="small" variant="tonal" @click="pistaStore.borrarPista(pista.idPista)">BORRAR</v-btn>
-            </td>
-          </tr>
+          <PistaRow 
+            v-for="pista in pistaStore.pistas" 
+            :key="pista.idPista" 
+            :pista="pista"
+            @edit="abrirFormularioEditar"
+            @delete="pistaStore.borrarPista"
+          />
         </tbody>
       </v-table>
     </v-card>
@@ -47,19 +41,20 @@
         <thead>
           <tr>
             <th>FECHA</th>
-            <th>ID USUARIO</th>
+            <th>USUARIO</th>
             <th>ID PISTA</th>
             <th class="text-center">DURACIÓN</th>
             <th class="text-right">TOTAL</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="reserva in reservaStore.reservas" :key="reserva.idReserva">
-            <td>{{ new Date(reserva.fecha).toLocaleDateString() }}</td>
-            <td>Usuario #{{ reserva.idUsuario?.idUsuario || reserva.idUsuario || '?' }}</td>
-            <td>Pista #{{ reserva.idPista?.idPista || reserva.idPista || '?' }}</td>
-            <td class="text-center">{{ reserva.horas }} h</td>
-            <td class="text-right text-green font-weight-bold">{{ reserva.precio }}€</td>
+          <ReservaRow 
+            v-for="reserva in reservaStore.reservas" 
+            :key="reserva.idReserva" 
+            :reserva="reserva"
+          />
+          <tr v-if="reservaStore.reservas.length === 0">
+            <td colspan="5" class="text-center py-4 text-grey">No hay reservas registradas.</td>
           </tr>
         </tbody>
       </v-table>
@@ -90,6 +85,9 @@
 import { ref, onMounted } from 'vue';
 import { usePistaStore } from '../stores/pistaStore';
 import { useReservaStore } from '../stores/reservaStore';
+// IMPORTAMOS LOS NUEVOS COMPONENTES
+import PistaRow from '../components/PistaRow.vue';
+import ReservaRow from '../components/ReservaRow.vue';
 
 const pistaStore = usePistaStore();
 const reservaStore = useReservaStore();
