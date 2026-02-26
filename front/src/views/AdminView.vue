@@ -3,68 +3,85 @@
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-white text-h4 font-weight-bold">Panel de Control</h1>
       <v-btn color="green-darken-2" @click="abrirFormularioCrear" class="px-6">
-        <span class="mr-2">➕</span> AÑADIR PISTA
+        <v-icon start>mdi-plus</v-icon> AÑADIR PISTA
       </v-btn>
     </div>
 
-    <v-table theme="dark" class="elevation-2 rounded-lg" style="background-color: #1e1e1e;">
-      <thead>
-        <tr>
-          <th class="text-grey-lighten-1">NOMBRE</th>
-          <th class="text-grey-lighten-1 text-center">ESTADO</th>
-          <th class="text-grey-lighten-1 text-center">PRECIO/H</th>
-          <th class="text-grey-lighten-1 text-center">ACCIONES</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="pista in pistaStore.pistas" :key="pista.idPista">
-          <td class="text-white font-weight-bold">{{ pista.nombre }}</td>
-          <td class="text-center">
-            <v-chip size="x-small" :color="pista.activa ? 'green' : 'red'">
-              {{ pista.activa ? 'SÍ' : 'NO' }}
-            </v-chip>
-          </td>
-          <td class="text-center text-blue font-weight-bold">{{ pista.precioHora }}€</td>
-          <td class="text-center pa-2">
-            <v-btn color="blue-darken-2" size="small" class="mr-2 px-4" @click="abrirFormularioEditar(pista)">
-              <span class="mr-1">✎</span> EDITAR
-            </v-btn>
-            <v-btn color="red-darken-3" size="small" class="px-4" @click="pistaStore.borrarPista(pista.idPista)">
-              <span class="mr-1">🗑</span> BORRAR
-            </v-btn>
-          </td>
-        </tr>
-      </tbody>
-    </v-table>
+    <v-card theme="dark" class="mb-12 rounded-lg" variant="outlined" style="border-color: #333;">
+      <v-card-title class="text-subtitle-1 text-grey-lighten-1">LISTADO DE PISTAS</v-card-title>
+      <v-table theme="dark">
+        <thead>
+          <tr>
+            <th>NOMBRE</th>
+            <th class="text-center">ESTADO</th>
+            <th class="text-center">PRECIO/H</th>
+            <th class="text-center">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="pista in pistaStore.pistas" :key="pista.idPista">
+            <td class="text-white">{{ pista.nombre }}</td>
+            <td class="text-center">
+              <v-chip size="x-small" :color="pista.activa ? 'green' : 'red'">
+                {{ pista.activa ? 'SÍ' : 'NO' }}
+              </v-chip>
+            </td>
+            <td class="text-center text-blue font-weight-bold">{{ pista.precioHora }}€</td>
+            <td class="text-center">
+              <v-btn color="blue" size="small" variant="tonal" class="mr-2" @click="abrirFormularioEditar(pista)">EDITAR</v-btn>
+              <v-btn color="red" size="small" variant="tonal" @click="pistaStore.borrarPista(pista.idPista)">BORRAR</v-btn>
+            </td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-card>
+
+    <div class="mb-6">
+      <h2 class="text-white text-h5 font-weight-bold">Historial de Reservas</h2>
+    </div>
+
+    <v-card theme="dark" class="rounded-lg" variant="outlined" style="border-color: #333;">
+      <v-progress-linear v-if="reservaStore.isLoading" indeterminate color="green"></v-progress-linear>
+      <v-table theme="dark">
+        <thead>
+          <tr>
+            <th>FECHA</th>
+            <th>ID USUARIO</th>
+            <th>ID PISTA</th>
+            <th class="text-center">DURACIÓN</th>
+            <th class="text-right">TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="reserva in reservaStore.reservas" :key="reserva.idReserva">
+            <td>{{ new Date(reserva.fecha).toLocaleDateString() }}</td>
+            <td>Usuario #{{ reserva.idUsuario }}</td>
+            <td>Pista #{{ reserva.idPista }}</td>
+            <td class="text-center">{{ reserva.horas }} h</td>
+            <td class="text-right text-green font-weight-bold">{{ reserva.precio }}€</td>
+          </tr>
+          <tr v-if="reservaStore.reservas.length === 0">
+            <td colspan="5" class="text-center py-4 text-grey">No hay reservas registradas.</td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-card>
 
     <v-dialog v-model="dialogo" max-width="500px">
-      <v-card theme="dark" border class="rounded-xl">
+      <v-card theme="dark" class="rounded-xl">
         <v-card-title class="bg-blue text-white pa-4">
-          {{ editando ? '✎ Modificar Pista' : '➕ Nueva Pista' }}
+          {{ editando ? '✎ Editar Pista' : '➕ Nueva Pista' }}
         </v-card-title>
-        
         <v-card-text class="pt-6">
           <v-text-field v-model="form.nombre" label="Nombre" variant="outlined" density="compact"></v-text-field>
           <v-text-field v-model="form.tipo" label="Deporte" variant="outlined" density="compact"></v-text-field>
-          <v-text-field v-model="form.direccion" label="Dirección" variant="outlined" density="compact"></v-text-field>
-          <v-text-field v-model.number="form.precioHora" label="Precio por Hora" type="number" variant="outlined" density="compact" suffix="€"></v-text-field>
-          
-          <v-switch 
-            v-model="form.activa" 
-            label="Pista disponible para reserva" 
-            color="green" 
-            inset 
-            density="compact"
-            class="mt-2"
-          ></v-switch>
+          <v-text-field v-model.number="form.precioHora" label="Precio/Hora" type="number" variant="outlined" density="compact"></v-text-field>
+          <v-switch v-model="form.activa" label="Pista Activa" color="green" inset></v-switch>
         </v-card-text>
-
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="dialogo = false">Cancelar</v-btn>
-          <v-btn color="blue" variant="flat" :loading="pistaStore.isLoading" @click="guardar">
-            {{ editando ? 'Guardar Cambios' : 'Crear Pista' }}
-          </v-btn>
+          <v-btn color="blue" variant="flat" @click="guardar">Guardar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -74,17 +91,23 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { usePistaStore } from '../stores/pistaStore';
+import { useReservaStore } from '../stores/reservaStore';
 
 const pistaStore = usePistaStore();
+const reservaStore = useReservaStore();
+
 const dialogo = ref(false);
 const editando = ref(false);
-const form = ref<any>({ nombre: '', tipo: '', direccion: '', precioHora: 0, activa: true });
+const form = ref<any>({ nombre: '', tipo: '', precioHora: 0, activa: true });
 
-onMounted(() => pistaStore.fetchPistas());
+onMounted(() => {
+  pistaStore.fetchPistas();
+  reservaStore.fetchReservas();
+});
 
 const abrirFormularioCrear = () => {
   editando.value = false;
-  form.value = { nombre: '', tipo: '', direccion: '', precioHora: 0, activa: true };
+  form.value = { nombre: '', tipo: '', precioHora: 0, activa: true };
   dialogo.value = true;
 };
 
