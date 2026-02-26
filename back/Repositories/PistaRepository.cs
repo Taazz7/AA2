@@ -120,6 +120,7 @@ namespace AA1.Repositories
                     command.Parameters.AddWithValue("@Direccion", pista.Direccion);
                     command.Parameters.AddWithValue("@Activa", pista.Activa);
                     command.Parameters.AddWithValue("@PrecioHora", pista.PrecioHora);
+                    command.Parameters.AddWithValue("@IdPista", pista.IdPista);
 
                     await command.ExecuteNonQueryAsync();
                 }

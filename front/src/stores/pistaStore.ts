@@ -4,43 +4,48 @@ import { ref } from 'vue';
 export const usePistaStore = defineStore('pista', () => {
   const pistas = ref<any[]>([]);
   const isLoading = ref(false);
-  const error = ref<string | null>(null);
 
-  // Acción para leer pistas
   const fetchPistas = async () => {
     isLoading.value = true;
     try {
       const response = await fetch('http://localhost:3000/api/Pista');
       if (response.ok) pistas.value = await response.json();
-    } catch (err) {
-      error.value = "Error al cargar datos";
-    } finally {
-      isLoading.value = false;
-    }
+    } catch (e) { console.error(e); }
+    finally { isLoading.value = false; }
   };
 
-  // Acción para EDITAR (PUT)
-  const editarPista = async (pistaEditada: any) => {
+  const editarPista = async (pista: any) => {
     isLoading.value = true;
     try {
-      const response = await fetch(`http://localhost:3000/api/Pista/${pistaEditada.idPista}`, {
+      const response = await fetch(`http://localhost:3000/api/Pista/${pista.idPista}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pistaEditada)
+        body: JSON.stringify(pista)
       });
       if (response.ok) {
-        // Actualizamos la lista local para que se vea el cambio sin refrescar
-        const index = pistas.value.findIndex(p => p.idPista === pistaEditada.idPista);
-        if (index !== -1) pistas.value[index] = pistaEditada;
+        const i = pistas.value.findIndex(p => p.idPista === pista.idPista);
+        if (i !== -1) pistas.value[i] = { ...pista };
         return true;
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      isLoading.value = false;
-    }
+    } catch (e) { console.error(e); }
+    finally { isLoading.value = false; }
     return false;
   };
 
-  return { pistas, isLoading, error, fetchPistas, editarPista };
+  const borrarPista = async (id: number) => {
+    if (!confirm("⚠️ ¿Estás seguro de eliminar esta pista definitivamente?")) return;
+    
+    isLoading.value = true;
+    try {
+      const res = await fetch(`http://localhost:3000/api/Pista/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        pistas.value = pistas.value.filter(p => p.idPista !== id);
+      } else {
+        alert("No se pudo borrar la pista. Comprueba la conexión.");
+      }
+    } catch (e) { alert("Error de servidor al intentar borrar."); }
+    finally { isLoading.value = false; }
+  };
+
+  return { pistas, isLoading, fetchPistas, editarPista, borrarPista };
 });
