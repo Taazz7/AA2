@@ -1,23 +1,19 @@
 <template>
   <v-app>
-    <HeaderComponent />
+    <HeaderComponent v-if="route.path !== '/login'" />
 
-    <v-main style="background-color: #121212; min-height: 100vh;">
-      <router-view></router-view>
+    <v-main class="bg-grey-darken-4">
+      <router-view />
     </v-main>
+
+    <FooterComponent v-if="route.path !== '/login'" />
   </v-app>
 </template>
 
 <script setup lang="ts">
-// Importamos el componente desde la carpeta components
+import { useRoute } from 'vue-router';
 import HeaderComponent from './components/HeaderComponent.vue';
-</script>
+// import FooterComponent from './components/FooterComponent.vue'; // Descomenta si tienes el archivo
 
-<style>
-/* Estilos globales para asegurar que no haya márgenes extraños */
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
-</style>
+const route = useRoute();
+</script>

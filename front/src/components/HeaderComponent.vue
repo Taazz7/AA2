@@ -1,15 +1,19 @@
 <template>
-  <v-app-bar color="blue" density="compact" elevation="0">
+  <v-app-bar 
+    :color="route.path.startsWith('/admin') ? 'green-darken-3' : 'blue'" 
+    density="compact" 
+    elevation="0"
+  >
     <v-app-bar-title class="text-white font-weight-bold">
-      Gestión de Pistas
+      {{ route.path.startsWith('/admin') ? 'Panel Administración' : 'Gestión de Pistas' }}
     </v-app-bar-title>
     
     <v-spacer></v-spacer>
 
-    <div class="d-flex align-center">
+    <div class="d-flex align-center px-4">
       
       <template v-if="authStore.isLogged">
-        <span class="text-white mr-4 text-body-2">
+        <span class="text-white mr-4 text-body-2 d-none d-sm-inline">
           Bienvenido, <strong>{{ authStore.userName }}</strong>
         </span>
 
@@ -18,7 +22,7 @@
         </v-btn>
 
         <v-btn 
-          v-if="authStore.isAdmin" 
+          v-if="authStore.isAdmin && !route.path.startsWith('/admin')" 
           to="/admin" 
           variant="tonal" 
           color="white" 
@@ -28,9 +32,19 @@
         </v-btn>
 
         <v-btn 
-          @click="handleLogout" 
+          v-if="route.path.startsWith('/admin')" 
+          to="/" 
           variant="outlined" 
           color="white" 
+          class="mr-2"
+        >
+          VOLVER A WEB
+        </v-btn>
+
+        <v-btn 
+          @click="handleLogout" 
+          variant="flat" 
+          color="red-lighten-1" 
           size="small"
         >
           CERRAR SESIÓN
@@ -39,7 +53,7 @@
 
       <template v-else>
         <v-btn to="/" variant="text" color="white" class="mr-2">INICIO</v-btn>
-        <v-btn to="/login" variant="text" color="white">LOGIN</v-btn>
+        <v-btn to="/login" variant="elevated" color="white" class="text-blue">LOGIN</v-btn>
       </template>
       
     </div>
@@ -48,12 +62,12 @@
 
 <script setup lang="ts">
 import { useAuthStore } from '../stores/authStore';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 
-// Función para cerrar sesión y volver a la raíz
 const handleLogout = () => {
   authStore.logout();
   router.push('/');
@@ -61,8 +75,8 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-/* Forzamos que los botones de Vuetify no tengan sombras pesadas si no quieres */
 .v-btn {
   font-weight: 500;
+  text-transform: none;
 }
 </style>
