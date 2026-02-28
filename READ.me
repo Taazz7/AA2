@@ -1,0 +1,12 @@
+Para ejecutar hay que lanzar / docker-compose up --build / o si necesitas limpiar los docker que tengas por que dan conflictos lanzar / docker-compose down -v ; docker-compose up --build /
+es preferible lanzar el segundo comando para un funcionamiento optimo
+
+usuario admin son : 
+admin  password: admin123
+usuario normal son :
+user password: user123
+
+
+nota: cuando se lanza el back tarda un poco en cargar, hay que refrescar la pantalla para ver las pistas
+
+url: http://localhost:8080/
