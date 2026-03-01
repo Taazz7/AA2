@@ -1,50 +1,8 @@
-<template>
-  <v-container class="fill-height" fluid>
-    <v-row align="center" justify="center">
-      <v-col cols="12" sm="8" md="4">
-        <v-card class="elevation-12" rounded="lg">
-          <v-toolbar color="primary" dark flat>
-            <v-toolbar-title class="text-h5">Acceso al Centro</v-toolbar-title>
-          </v-toolbar>
-          
-          <v-card-text class="pt-6">
-            <v-form @submit.prevent="onSubmit">
-              <v-text-field
-                v-model="usuario"
-                label="Usuario o Email"
-                prepend-inner-icon="mdi-account"
-                variant="outlined"
-              ></v-text-field>
-
-              <v-text-field
-                v-model="contraseña"
-                label="Contraseña"
-                prepend-inner-icon="mdi-lock"
-                type="password"
-                variant="outlined"
-              ></v-text-field>
-
-              <v-alert v-if="serverError" type="error" variant="tonal" class="mt-4">
-                {{ serverError }}
-              </v-alert>
-            </v-form>
-          </v-card-text>
-
-          <v-card-actions class="pa-4">
-            <v-btn color="grey" variant="text" @click="router.push('/')">Volver</v-btn>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" :loading="loading" @click="onSubmit">Entrar</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
-</template>
-
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
+import Swal from 'sweetalert2'; // 1. Importamos SweetAlert2
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -54,10 +12,25 @@ const serverError = ref('');
 const loading = ref(false);
 
 const onSubmit = async () => {
+  // Validación básica antes de consultar al servidor
+  if (!usuario.value || !contraseña.value) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Campos incompletos',
+      text: 'Por favor, introduce tu usuario y contraseña',
+      confirmButtonColor: '#1976D2' // Azul primario de Vuetify
+    });
+    return;
+  }
+
   serverError.value = '';
   loading.value = true;
+  
   try {
     const response = await fetch('http://localhost:3000/api/Usuario');
+    
+    if (!response.ok) throw new Error("Error en la respuesta del servidor");
+    
     const usuarios = await response.json();
 
     const userFound = usuarios.find((u: any) => 
@@ -66,14 +39,25 @@ const onSubmit = async () => {
     );
 
     if (userFound) {
-      // Pasamos ID, Nombre y Rol al Store
+      // El login() del authStore ya disparará la alerta de éxito que configuramos antes
       authStore.login(userFound.idUsuario, userFound.usuarioNombre, userFound.rol);
       router.push('/');
     } else {
       serverError.value = "Credenciales incorrectas";
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de acceso',
+        text: 'Usuario o contraseña no válidos',
+        confirmButtonColor: '#FF5252'
+      });
     }
   } catch (error) {
     serverError.value = "Error de conexión con el servidor";
+    Swal.fire({
+      icon: 'error',
+      title: 'Servidor no disponible',
+      text: 'No se pudo conectar con la base de datos. Inténtalo más tarde.',
+    });
   } finally {
     loading.value = false;
   }

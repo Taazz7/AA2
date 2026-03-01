@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import Swal from 'sweetalert2'; // 1. Importar SweetAlert2
 
 export const usePistaStore = defineStore('pista', () => {
   const pistas = ref<any[]>([]);
@@ -10,9 +11,14 @@ export const usePistaStore = defineStore('pista', () => {
     isLoading.value = true;
     try {
       const response = await fetch('http://localhost:3000/api/Pista');
-      if (response.ok) pistas.value = await response.json();
+      if (response.ok) {
+        pistas.value = await response.json();
+      } else {
+        throw new Error("Error al obtener datos");
+      }
     } catch (err) {
       console.error("Error al cargar:", err);
+      Swal.fire('Error', 'No se pudieron cargar las pistas', 'error');
     } finally {
       isLoading.value = false;
     }
@@ -29,11 +35,18 @@ export const usePistaStore = defineStore('pista', () => {
       });
       if (response.ok) {
         const creada = await response.json();
-        pistas.value.push(creada); // Actualización reactiva instantánea
+        pistas.value.push(creada);
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Pista creada!',
+          timer: 1500,
+          showConfirmButton: false
+        });
         return true;
       }
     } catch (err) {
-      console.error("Error al crear:", err);
+      Swal.fire('Error', 'No se pudo crear la pista', 'error');
     } finally {
       isLoading.value = false;
     }
@@ -50,13 +63,14 @@ export const usePistaStore = defineStore('pista', () => {
         body: JSON.stringify(pistaEditada)
       });
       if (response.ok) {
-        // Buscamos y actualizamos en la lista local
         const index = pistas.value.findIndex(p => p.idPista === pistaEditada.idPista);
         if (index !== -1) pistas.value[index] = { ...pistaEditada };
+        
+        Swal.fire('Actualizado', 'La pista se ha modificado correctamente', 'success');
         return true;
       }
     } catch (err) {
-      console.error("Error al editar:", err);
+      Swal.fire('Error', 'Error al actualizar la pista', 'error');
     } finally {
       isLoading.value = false;
     }
@@ -65,17 +79,33 @@ export const usePistaStore = defineStore('pista', () => {
 
   // --- ACCIÓN: Borrar Pista (DELETE) ---
   const borrarPista = async (id: number) => {
-    if (!confirm("⚠️ ¿Estás seguro de eliminar esta pista definitivamente?")) return;
-    isLoading.value = true;
-    try {
-      const response = await fetch(`http://localhost:3000/api/Pista/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        pistas.value = pistas.value.filter(p => p.idPista !== id);
+    // 2. Sustituimos confirm() por una alerta de confirmación asíncrona
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "Esta acción eliminará la pista definitivamente",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      isLoading.value = true;
+      try {
+        const response = await fetch(`http://localhost:3000/api/Pista/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          pistas.value = pistas.value.filter(p => p.idPista !== id);
+          Swal.fire('Eliminado', 'La pista ha sido borrada.', 'success');
+        } else {
+          Swal.fire('Error', 'No se pudo eliminar de la base de datos', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'Hubo un fallo en la conexión', 'error');
+      } finally {
+        isLoading.value = false;
       }
-    } catch (err) {
-      console.error("Error al borrar:", err);
-    } finally {
-      isLoading.value = false;
     }
   };
 

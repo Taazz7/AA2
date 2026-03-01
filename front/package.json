@@ -17,6 +17,7 @@
     "pinia": "^2.x.x",
     "vee-validate": "^4.15.1",
     "vue": "^3.x.x",
+    "sweetalert2": "^11.x.x",
     "vue-router": "^4.x.x",
     "vuetify": "^3.5.0",
     "webfontloader": "^1.6.28",

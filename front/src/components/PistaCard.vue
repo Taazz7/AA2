@@ -28,18 +28,43 @@
 </template>
 
 <script setup lang="ts">
-// Definimos la interfaz para cumplir con TypeScript [cite: 25]
 import type { Pista } from '../interfaces/Pista';
+import Swal from 'sweetalert2'; // 1. Importamos la librería
 
-defineProps<{
+const props = defineProps<{
   pista: Pista,
   isAdmin?: boolean
 }>();
 
 const emit = defineEmits(['edit', 'delete', 'reserve']);
 
-const handleReserva = () => {
-  console.log("Reserva iniciada");
-  // Aquí irá la lógica de reserva [cite: 49]
+// 2. Modificamos la función para que sea asíncrona y use SweetAlert
+const handleReserva = async () => {
+  const result = await Swal.fire({
+    title: '¿Confirmar reserva?',
+    text: `Vas a reservar la pista: ${props.pista.nombre}`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#4caf50', // Verde de Vuetify/Success
+    cancelButtonColor: '#f44336',
+    confirmButtonText: 'Sí, reservar ahora',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (result.isConfirmed) {
+    // Si el usuario acepta, emitimos el evento al componente padre
+    emit('reserve', props.pista);
+    
+    // Mostramos un pequeño aviso de que la acción se ha procesado
+    Swal.fire({
+      title: 'Procesando...',
+      text: 'Estamos gestionando tu solicitud',
+      icon: 'info',
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'bottom-end'
+    });
+  }
 };
 </script>
